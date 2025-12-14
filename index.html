@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The CTF Field Journal</title>
+    <style>
+        :root {
+            --primary-color: #0d0d0d;
+            --secondary-color: #1a1a1a;
+            --accent-color: #00ff99;
+            --text-color: #e0e0e0;
+            --header-font: 'Courier New', Courier, monospace;
+            --body-font: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            font-family: var(--body-font);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            line-height: 1.6;
+        }
+
+        #sidebar {
+            width: 250px;
+            background-color: var(--secondary-color);
+            height: 100vh;
+            position: fixed;
+            padding: 20px;
+            border-right: 1px solid var(--accent-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar h1 {
+            font-family: var(--header-font);
+            color: var(--accent-color);
+            font-size: 1.5em;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 5px var(--accent-color);
+        }
+
+        #sidebar nav ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #sidebar nav ul li a {
+            color: var(--text-color);
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        #sidebar nav ul li a:hover {
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+        }
+
+        main {
+            margin-left: 270px;
+            padding: 40px;
+            width: calc(100% - 310px);
+        }
+        
+        #search-bar {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 40px;
+            background-color: var(--secondary-color);
+            border: 1px solid var(--accent-color);
+            border-radius: 5px;
+            color: var(--text-color);
+            font-size: 1.1em;
+            font-family: var(--header-font);
+        }
+        
+        #search-bar:focus {
+            outline: none;
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        article {
+            background-color: var(--secondary-color);
+            padding: 30px;
+            margin-bottom: 40px;
+            border-radius: 8px;
+            border-left: 5px solid var(--accent-color);
+            display: block; /* Ensure articles are visible by default */
+        }
+
+        article h2 {
+            font-family: var(--header-font);
+            color: var(--accent-color);
+            margin-top: 0;
+        }
+
+        article p {
+            font-size: 1.1em;
+        }
+
+        code {
+            background-color: var(--primary-color);
+            color: #ff5555;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: var(--header-font);
+        }
+        
+        pre {
+            background-color: var(--primary-color);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        
+
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <aside id="sidebar">
+        <h1>CTF Field Journal</h1>
+        <nav>
+            <ul>
+                <li><a href="#ctf-guide">CTF Beginner's Guide</a></li>
+                <li><a href="#osint">OSINT Techniques</a></li>
+                <li><a href="#web-exploit">Web Exploitation 101</a></li>
+                <li><a href="#privesc">Privilege Escalation</a></li>
+                <li><a href="#challenge">The Glitching Sentinel</a></li>
+                <li><a href="#crypto">Intro to Cryptography</a></li>
+                <li><a href="#steganography">Art of Steganography</a></li>
+                <li><a href="#forensics">Digital Forensics Basics</a></li>
+                <li><a href="#binary">Intro to Binary Exploitation</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main>
+        <input type="search" id="search-bar" placeholder="Search articles...">
+
+        <article id="ctf-guide">
+            <h2>How to Approach a CTF: A Beginner's Guide</h2>
+            <p>New to Capture The Flag events? The key is methodology. Start with reconnaissance: run scans, check for public exploits, and understand the attack surface. Don't get stuck on one problem for too long; move around and come back with fresh eyes. Teamwork is crucial. Communicate your findings with your team, as a small piece of information you found might be the missing link for someone else's challenge. Most importantly, have fun and learn as much as you can.</p>
+        </article>
+
+        <article id="osint">
+            <h2>The Art of Open-Source Intelligence (OSINT)</h2>
+            <p>OSINT is the practice of collecting information from publicly available sources. In a CTF context, this could mean anything from finding hidden information in a company's website to digging through social media profiles. Key tools include Google Dorking, Maltego for visualizing connections, and Shodan for searching internet-connected devices. Successful OSINT requires a curious mindset and a methodical approach to piecing together seemingly unrelated data points to reveal the bigger picture.</p>
+        </article>
+        
+        <article id="web-exploit">
+            <h2>Web Exploitation 101: XSS and SQLi</h2>
+            <p>Web exploitation challenges are a CTF staple. Two of the most common vulnerabilities are Cross-Site Scripting (XSS) and SQL Injection (SQLi).</p>
+            <p><b>XSS</b> involves injecting malicious scripts into trusted websites. A reflected XSS attack occurs when a script is injected via a URL parameter, like <code>?search=&lt;script&gt;alert(1)&lt;/script&gt;</code>. Stored XSS is more dangerous, as the payload is saved on the server and served to all users.</p>
+            <p><b>SQL Injection</b> targets the database. By manipulating input fields, an attacker can execute arbitrary SQL queries. A classic example is using <code>' OR '1'='1</code> in a login form to bypass authentication. Time-based blind SQLi is an advanced variant where you infer data by forcing the database to wait for a specific amount of time, similar to some character fuzzing techniques.</p>
+        </article>
+
+        <article id="privesc">
+            <h2>Beyond the Foothold: Privilege Escalation</h2>
+            <p>Gaining initial access is only the first step. Privilege escalation is the process of elevating your rights from a low-level user to a higher-level one, like 'root' or 'SYSTEM'. On Linux, this could involve exploiting sudo misconfigurations, finding SUID binaries, or using kernel exploits. On Windows, weak service permissions, unquoted service paths, and DLL hijacking are common vectors. Tools like <code>LinEnum.sh</code> and <code>WinPEAS</code> are invaluable for automating the search for these vulnerabilities.</p>
+        </article>
+        
+        <article id="challenge">
+            <h2>The Glitching Sentinel</h2>
+            <p>
+                We've intercepted a communication packet from a target server, but the data stream was corrupted during transmission. On the server, a 'Sentinel' program is responsible for verifying data integrity. Our intel suggests this verification process is flawed. The Sentinel checks a security token—the flag—one character at a time. If a character is correct, it takes a fraction of a second longer to process before checking the next one. If it's wrong, it rejects the input almost instantly.
+            </p>
+            <p>
+                The original flag was lost in the data corruption. flag:******************* All we have is a placeholder where the flag should be. Your mission is to reconstruct the original flag by exploiting this timing vulnerability. You must write a script to fuzz the validation endpoint and leak the flag, character by character. 
+            </p>
+
+            <p>
+                The server endpoint is ready. Can you abuse the sentinel's flawed logic to recover the lost data?
+            </p>
+            <span style="display: none;">Keywords: real flag, hidden flag, server-side flag</span>
+        </article>
+
+        <article id="crypto">
+            <h2>Intro to Cryptography: Ciphers and Hashes</h2>
+            <p>Cryptography challenges involve breaking or manipulating codes and ciphers. You'll often encounter everything from classical ciphers like Caesar and Vigenère to modern RSA or AES encryption. A key concept is understanding the difference between encoding (like Base64, which is reversible) and encryption (which requires a key). Tools like CyberChef are indispensable for quickly testing different decryption and decoding methods against a piece of ciphertext.</p>
+        </article>
+
+        <article id="steganography">
+            <h2>Steganography: The Art of Hiding Data</h2>
+            <p>Steganography is the technique of hiding secret data within a non-secret file or message. In CTFs, this often involves finding flags hidden in images, audio files, or even text. For images, you might use tools like <code>steghide</code> or <code>zsteg</code> to extract hidden data. Sometimes the clue is in the Least Significant Bit (LSB) of the color channels. Always check file headers and metadata, as secrets can be hidden in plain sight.</p>
+        </article>
+        
+        <article id="forensics">
+            <h2>Digital Forensics Basics</h2>
+            <p>Forensics challenges task you with analyzing digital artifacts—disk images, memory dumps, or network captures—to find a flag. Common tools include <code>strings</code> to find readable text in binary files, <code>binwalk</code> to identify and extract embedded files, and Wireshark for analyzing <code>.pcap</code> files to uncover network secrets. The key is to be meticulous. Examine file metadata, recover deleted files, and look for anything out of the ordinary.</p>
+        </article>
+        
+        <article id="binary">
+            <h2>Intro to Binary Exploitation (Pwn)</h2>
+            <p>Binary exploitation, or "pwn," is the art of finding vulnerabilities in compiled programs and creating exploits to take control of them. It often involves reverse-engineering a program using tools like Ghidra or IDA Pro. Common vulnerabilities include buffer overflows, where you write more data into a buffer than it can hold, allowing you to overwrite adjacent memory and hijack the program's execution flow. This is a challenging but rewarding category that provides a deep understanding of how software and hardware interact.</p>
+        </article>
+
+    </main>
+
+
+
+
+<script src="/script.js"></script>
+
+
+
+</body>
+</html>
