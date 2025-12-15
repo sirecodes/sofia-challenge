@@ -3,7 +3,7 @@ import string
 import time
 import statistics
 
-URL = "https://sofia-challenge.vercel.app/api/validate"
+URL = "http://localhost:3000/api/validate"
 
 CHARSET = string.ascii_uppercase + string.digits + "_{}"
 INITIAL_ATTEMPTS = 10     # More initial samples
