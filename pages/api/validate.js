@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  const REAL_FLAG = "CREED{FUZZ1NG_D0N3}";
+  const REAL_FLAG = "SENT1NEL_OBS3RV3S";
   const TIME_DELAY = 50; // ms
 
   if (req.method !== "POST") {
