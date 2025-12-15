@@ -1,5 +1,5 @@
 const REAL_FLAG = "SENT1NEL_OBS3RV3S";
-const TIME_DELAY = 50; // ms
+const TIME_DELAY = 100; // Increased from 50ms to 100ms
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -17,31 +17,34 @@ export async function POST(request) {
       );
     }
 
+    // Character-by-character comparison with timing leak
     for (let i = 0; i < submittedFlag.length; i++) {
-      if (
-        i >= REAL_FLAG.length ||
-        submittedFlag[i] !== REAL_FLAG[i]
-      ) {
+      if (i >= REAL_FLAG.length || submittedFlag[i] !== REAL_FLAG[i]) {
+        // Wrong character - return immediately
         return Response.json({
           status: "error",
-          message: "Validation failed"
+          message: "Validation failed",
+          position: i // Helpful for debugging (optional)
         });
       }
 
-      // ⏱️ Intentional timing leak
+      // ⏱️ Intentional timing leak - delay AFTER each correct character
       await sleep(TIME_DELAY);
     }
 
+    // Check if complete
     if (submittedFlag === REAL_FLAG) {
       return Response.json({
         status: "success",
-        message: "Flag Correct!"
+        message: "Flag Correct! 🎉"
       });
     }
 
+    // Correct so far but incomplete
     return Response.json({
       status: "partial",
-      message: "Keep going..."
+      message: "Keep going...",
+      length: submittedFlag.length
     });
 
   } catch (err) {
