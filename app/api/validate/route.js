@@ -1,5 +1,5 @@
-const REAL_FLAG = "SENT1NEL_OBS3RV3S";
-const TIME_DELAY = 100; // Increased from 50ms to 100ms
+const REAL_FLAG = "CTF{TIM3_L34K}";  // Shorter flag (14 chars)
+const TIME_DELAY = 150; // 150ms per correct character
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -12,23 +12,26 @@ export async function POST(request) {
 
     if (!submittedFlag) {
       return Response.json(
-        { status: "error", message: "Invalid request. 'flag' missing." },
+        { status: "error", message: "Missing flag parameter" },
         { status: 400 }
       );
     }
 
-    // Character-by-character comparison with timing leak
+    // Character-by-character validation with timing leak
+    let correctChars = 0;
+    
     for (let i = 0; i < submittedFlag.length; i++) {
       if (i >= REAL_FLAG.length || submittedFlag[i] !== REAL_FLAG[i]) {
-        // Wrong character - return immediately
+        // Wrong character - return immediately with hint
         return Response.json({
           status: "error",
-          message: "Validation failed",
-          position: i // Helpful for debugging (optional)
+          message: "Incorrect flag",
+          hint: `You got ${correctChars} character(s) correct`
         });
       }
 
-      // ⏱️ Intentional timing leak - delay AFTER each correct character
+      // Correct character - add delay
+      correctChars++;
       await sleep(TIME_DELAY);
     }
 
@@ -36,20 +39,19 @@ export async function POST(request) {
     if (submittedFlag === REAL_FLAG) {
       return Response.json({
         status: "success",
-        message: "Flag Correct! 🎉"
+        message: "🎉 Correct flag!"
       });
     }
 
     // Correct so far but incomplete
     return Response.json({
       status: "partial",
-      message: "Keep going...",
-      length: submittedFlag.length
+      message: `Correct so far! ${correctChars}/${REAL_FLAG.length} characters found`
     });
 
   } catch (err) {
     return Response.json(
-      { status: "error", message: "Bad JSON" },
+      { status: "error", message: "Invalid request" },
       { status: 400 }
     );
   }
